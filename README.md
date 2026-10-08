@@ -1,62 +1,41 @@
 # ppt-to-obsidian-note
 
-把课程课件 PDF（slide deck）一键转成**可直接放进 Obsidian 的 Markdown 学习笔记**的 skill。
+把课程课件 PDF 整理成 Obsidian 学习笔记，保留可核对的 PDF 物理页码、关键图表和自测题。Skill 会要求生成者核对来源、代码示例的文件归属与完整性，以及本地链接；无法核实的内容应明确标注。
 
-不只是抽文字，更会**把课件里的图解读出来**：流程图重画成 Mermaid、图片表格转成 Markdown 表、公式还原成 LaTeX，复杂示意图原图嵌入——每张都带回 PPT 页码对照，方便复习时翻原课件。
+## 安装到 DSH
 
-## 特性
-
-- 📄 **文本 + 图解双通道**：`pymupdf` 提取文字 + 渲染页面 → 视觉模型读图，不再丢图
-- 🧩 **图解智能分流**：流程图/架构/状态机 → Mermaid；图片表格 → Markdown 表；公式 → LaTeX；照片/复杂示意图 → 原图嵌入 `![[...]]`
-- 🎯 **只挑教学关键图**：每章 1–3 张、全篇 ≤15 张，忽略装饰图/重复图
-- 🔢 **全篇页码映射**：顶部索引总表 + 每个标题标 `PPT x–y`
-- 📝 **教学式改写**：callout、wiki 双链、代码块、对照表格，讲清「为什么 / 直觉 / 口诀」
-- 🧮 **扫描版 PDF OCR**：自动检测无文字层课件，走 `ocrmypdf` / `pytesseract`
-- 🧮 **公式 LaTeX 还原**：碎下标/分式/乱码 → `$...$`
-- ✅ **针对性自测**：贴考点/易错点，关起式答案
-
-## 安装
-
-把 `SKILL.md` 放到 DSH 的 skills 目录：
+复制**整个目录**，让 `SKILL.md` 和只读检查脚本保持在一起：
 
 ```bash
 mkdir -p ~/.dsh/skills/ppt-to-obsidian-note
-cp SKILL.md ~/.dsh/skills/ppt-to-obsidian-note/
+cp -R SKILL.md scripts references ~/.dsh/skills/ppt-to-obsidian-note/
 ```
 
-## 用法
+从仓库根目录运行上述命令。安装后可以给助手一份课件 PDF，并说明笔记保存位置，例如：
 
-把课件 PDF 路径丢给助手，说「做成 Obsidian 笔记」即可：
+> 把这份课件整理成 Obsidian 学习笔记，保存在我指定的课程文件夹。
 
+若未指定 Vault，skill 会在当前可写工作区生成笔记，不自行寻找个人 Vault。
+
+## 本地链接检查
+
+在笔记与附件放到最终目录后运行：
+
+```bash
+python3 scripts/check_note.py '/path/to/lesson.md' --vault '/path/to/Obsidian Vault'
 ```
-把 Chapter1_Digital Systems and Information.pdf 做成 Obsidian 笔记
+
+它检查 `[[wikilink]]`、本地 Markdown 链接和图片路径是否存在，跳过代码块与外部 URL。脚本只读，不会修改笔记。它不验证事实、代码能否编译或 Obsidian 实际渲染，这些要按 `SKILL.md` 的交付检查人工核对。
+
+测试：
+
+```bash
+python3 -m unittest discover -s tests -v
 ```
 
 ## 依赖
 
-```bash
-python3 -m pip install pymupdf pdfplumber pypdf
-# 扫描版 PDF 额外装：
-python3 -m pip install ocrmypdf   # 或 pytesseract + tesseract 二进制
-```
-
-| 工具 | 用途 |
-| --- | --- |
-| `pymupdf` | 主力：文本提取 + 页面渲染成图 + 内嵌图提取 + `find_tables()` 表格识别 |
-| `pdfplumber` | 表格结构补充 |
-| `pypdf` | 兜底 |
-| `ocrmypdf` / `pytesseract` | 扫描版 OCR |
-
-> 注意：macOS 上 `poppler`（`pdftotext`/`pdftoppm`）常未安装，本 skill 以 `pymupdf` 为主力，不依赖 poppler。
-
-## 目录结构
-
-```
-.
-├── SKILL.md   # skill 指令本体
-├── README.md
-└── LICENSE
-```
+检查脚本只使用 Python 标准库。生成笔记时可根据当前环境使用 PyMuPDF、OCR、PDF 页面渲染和图像理解工具；不要求固定工具组合。安装额外依赖前先看环境中已有的能力。
 
 ## License
 
